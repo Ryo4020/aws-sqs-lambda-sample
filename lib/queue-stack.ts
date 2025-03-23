@@ -8,8 +8,8 @@ export class QueueStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const queue = generateSampleSqs(this);
+    const queue = generateSampleSqs(this, id);
 
-    generateSampleSubscriberFunction(this, queue);
+    generateSampleSubscriberFunction(this, id, queue);
   }
 }

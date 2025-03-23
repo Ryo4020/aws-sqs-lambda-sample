@@ -10,4 +10,4 @@ const env = {
 }
 
 const app = new cdk.App();
-new QueueStack(app, servicePrefix + 'QueueStack', { env });
+new QueueStack(app, `${servicePrefix}QueueStack`, { env });
