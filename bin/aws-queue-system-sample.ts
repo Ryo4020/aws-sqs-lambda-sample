@@ -2,7 +2,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { QueueStack } from '../lib/queue-stack';
 
-const servicePrefix = 'PolicyAttachmentSample';
+const servicePrefix = 'AWSQueueSystemSample';
 
 const env = {
   account: process.env.CDK_ACCOUNT,

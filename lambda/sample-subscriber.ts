@@ -1,6 +1,6 @@
-import { SQSEvent, SQSBatchResponse } from 'aws-lambda';
+import { SQSEvent, SQSBatchResponse, SQSHandler } from 'aws-lambda';
 
-export const handler = async (event: SQSEvent): Promise<SQSBatchResponse> => {
+export const handler: SQSHandler = async (event: SQSEvent): Promise<SQSBatchResponse> => {
 	const result = MyLambdaFunction (event.Records);
 
     return result;

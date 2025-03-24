@@ -1,8 +1,8 @@
 {
-  "name": "aws-cdk-policy-attachment",
+  "name": "aws-queue-system-sample",
   "version": "0.1.0",
   "bin": {
-    "aws-cdk-policy-attachment": "bin/aws-cdk-policy-attachment.js"
+    "aws-queue-system-sample": "bin/aws-queue-system-sample.js"
   },
   "scripts": {
     "build": "tsc",
