@@ -2,23 +2,24 @@ import { Construct } from 'constructs';
 import * as cdk from 'aws-cdk-lib';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 
-export const generateSampleSqs = (scope: Construct, id: string) => {
+import { attachServicePrefix } from '../../util/attach-service-prefix';
+
+export const generateBucketEventQueue = (scope: Construct) => {
+    // S3 event notifications aren't currently compatible with FIFO queues.
+
     // Create a dead letter queue
     const deadLetterQueue = new sqs.Queue(scope, 'DeadLetterQueue', {
-        queueName: `${id}DeadLetterQueue.fifo`,
-        fifo: true,
+        queueName: attachServicePrefix('BucketEventQueueDeadLetterQueue'),
         visibilityTimeout: cdk.Duration.seconds(30),
     });
 
-    const queue = new sqs.Queue(scope, 'SampleFifoQueue', {
-        queueName: `${id}SampleQueue.fifo`,
-        fifo: true,
+    const queue = new sqs.Queue(scope, 'BucketEventQueue', {
+        queueName: attachServicePrefix('BucketEventQueue'),
         visibilityTimeout: cdk.Duration.seconds(30),
         deadLetterQueue: {
             maxReceiveCount: 2,
             queue: deadLetterQueue
         },
-        contentBasedDeduplication: true,
         receiveMessageWaitTime: cdk.Duration.seconds(10), // Long polling
         redriveAllowPolicy: {
             redrivePermission: sqs.RedrivePermission.DENY_ALL,

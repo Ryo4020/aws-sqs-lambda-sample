@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
-import { QueueStack } from '../lib/queue-stack';
-
-const servicePrefix = 'AWSQueueSystemSample';
+import { QueueSystemStack } from '../lib/queue-system-stack';
+import { attachServicePrefix } from '../util/attach-service-prefix';
 
 const env = {
   account: process.env.CDK_ACCOUNT,
@@ -10,4 +9,4 @@ const env = {
 }
 
 const app = new cdk.App();
-new QueueStack(app, `${servicePrefix}QueueStack`, { env });
+new QueueSystemStack(app, attachServicePrefix('Stack'), { env });
