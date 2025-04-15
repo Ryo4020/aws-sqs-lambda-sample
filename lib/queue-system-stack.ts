@@ -35,6 +35,9 @@ export class QueueSystemStack extends cdk.Stack {
     // Add the table policy to the Lambda function
     this.addTablePolicyToSubscriber(subscriber, dataTable);
     this.addTablePolicyToSubscriber(subscriber, timestampTable);
+
+    // Add the bucket policy to the Lambda function
+    this.addBucketGetPolicyToSubscriber(subscriber, bucket);
   }
 
   private addBucketEventNotificationToQueue(bucket: s3.Bucket, queue: sqs.Queue) {
@@ -52,8 +55,12 @@ export class QueueSystemStack extends cdk.Stack {
       reportBatchItemFailures: true
     }));
   }
-  
+
   private addTablePolicyToSubscriber(subscriber: lambda.Function, table: dynamodb.TableV2) {
     table.grantReadWriteData(subscriber);
+  }
+
+  private addBucketGetPolicyToSubscriber(subscriber: lambda.Function, bucket: s3.Bucket) {
+    bucket.grantRead(subscriber);
   }
 }

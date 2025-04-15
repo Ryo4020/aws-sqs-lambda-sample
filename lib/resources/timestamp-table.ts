@@ -10,7 +10,7 @@ export const generateTimestampTable = (scope: Construct) : dynamodb.TableV2 => {
         partitionKey: { name: 'source_file_name', type: dynamodb.AttributeType.STRING },
         billing: dynamodb.Billing.onDemand(),
         removalPolicy: cdk.RemovalPolicy.DESTROY,
-        timeToLiveAttribute: 'ttl',
+        timeToLiveAttribute: 'ttl', // unit: seconds
     });
 
     return table;
