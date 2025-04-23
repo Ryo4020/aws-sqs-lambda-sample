@@ -5,7 +5,7 @@ import { attachServicePrefix } from '../../util/attach-service-prefix';
 
 export const generateEventSourceBucket = (scope: Construct): s3.Bucket => {
     const bucket = new s3.Bucket(scope, 'EventSourceBucket', {
-        autoDeleteObjects: false,
+        autoDeleteObjects: true,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
         blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
         bucketName: attachServicePrefix('event-source-bucket', true),
