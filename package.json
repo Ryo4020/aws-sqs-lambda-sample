@@ -9,6 +9,7 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
+    "debug-publisher": "ts-node lambda/local/publisher-exec.ts",
     "debug-subscriber": "ts-node lambda/local/subscriber-exec.ts",
     "cmd-put-retention": "ts-node cmd/put-retention-to-log-groups.ts"
   },
