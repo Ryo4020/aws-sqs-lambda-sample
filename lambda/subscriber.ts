@@ -1,10 +1,10 @@
-import { S3Event, SQSBatchResponse, SQSRecord, SQSEvent, SQSHandler, SQSBatchItemFailure } from "aws-lambda";
+import { SQSBatchResponse, SQSRecord, SQSEvent, SQSHandler, SQSBatchItemFailure } from "aws-lambda";
 
 import { getTimestampMapByObjectKeys } from "./data-access/dynamodb/get-timestamp-map-by-object-keys";
 import { reflectPutObjectData } from "./logic/reflect-put-object-data";
 import { reflectDeleteObjectData } from "./logic/reflect-delete-object-data";
-import { BucketEventMessageType } from "./type/bucket-event-message";
-import { bucketEventTypeFromEventName } from "./type/bucket-event-type";
+import { ReceivedSqsMessageType } from "./type/received-sqs-message";
+import { SqsMessageBodyType } from "./type/sqs-message-body";
 
 export const handler: SQSHandler = async (event: SQSEvent) => {
 	const result = mainFunc(event.Records);
@@ -13,36 +13,26 @@ export const handler: SQSHandler = async (event: SQSEvent) => {
 }
 
 export const mainFunc = async (sqsRecords: SQSRecord[]): Promise<SQSBatchResponse> => {
-    const bucketEventMessages: BucketEventMessageType[] = [];
+    const receivedMessages: ReceivedSqsMessageType[] = [];
 
     for (const sqsRecord of sqsRecords) {
-        const body = JSON.parse(sqsRecord.body) as S3Event;
+        const body = JSON.parse(sqsRecord.body) as SqsMessageBodyType;
 
-        for (const s3Record of body.Records) {
-            const eventType = bucketEventTypeFromEventName(s3Record.eventName);
-            if (!eventType) {
-                console.error(`S3 eventName ${s3Record.eventName} is not supported`);
-                continue;
-            }
+        const objectKey = body.objectKey;
+        const eventTimestampMilliSec = body.eventTimestampMilliSec;
+        if (receivedMessages.some(
+            (message) => message.body.objectKey === objectKey && message.body.eventTimestampMilliSec >= eventTimestampMilliSec
+        )) continue
 
-            const objectKey = s3Record.s3.object.key;
-            const eventTimestamp = new Date(s3Record.eventTime);
-            if (bucketEventMessages.some(
-                (message) => message.objectKey === objectKey && message.eventTimestamp.getDate() >= eventTimestamp.getDate()
-            )) continue
-
-            bucketEventMessages.push({
-                messaqeId: sqsRecord.messageId,
-                eventType: eventType,
-                eventTimestamp: eventTimestamp,
-                objectKey: objectKey
-            })
-        }
+        receivedMessages.push({
+            messageId: sqsRecord.messageId,
+            body
+        })
     }
 
-    if (bucketEventMessages.length === 0) return { batchItemFailures: [] };
+    if (receivedMessages.length === 0) return { batchItemFailures: [] };
 
-    const objectKeys = bucketEventMessages.map((message) => message.objectKey);
+    const objectKeys = receivedMessages.map((message) => message.body.objectKey);
     const timestampResponse = await (async () => {
         try {
             const getTimestampMapResponse = await getTimestampMapByObjectKeys(objectKeys);
@@ -56,8 +46,8 @@ export const mainFunc = async (sqsRecords: SQSRecord[]): Promise<SQSBatchRespons
             return {
                 ok: null,
                 error: {
-                    batchItemFailures: bucketEventMessages.map((message) => ({
-                        itemIdentifier: message.messaqeId,
+                    batchItemFailures: receivedMessages.map((message) => ({
+                        itemIdentifier: message.messageId,
                     })),
                 },
             };
@@ -69,42 +59,39 @@ export const mainFunc = async (sqsRecords: SQSRecord[]): Promise<SQSBatchRespons
     console.log(`Timestamp map: ${[...timestampMap.values()]}`);
 
     const reflectPromises: Promise<string>[] = []
-    bucketEventMessages.forEach(async (message) => {
-        const timestamp = timestampMap.get(message.objectKey);
-        if (timestamp && message.eventTimestamp.getTime() <= timestamp.getTime()) return;
+    receivedMessages.forEach(async (message) => {
+        const timestamp = timestampMap.get(message.body.objectKey);
+        if (timestamp && message.body.eventTimestampMilliSec <= timestamp.getTime()) return;
 
-        switch (message.eventType) {
+        switch (message.body.eventType) {
             case "Put":
                 const putPromise = new Promise<string>(async (resolve, reject) => {
-                    reflectPutObjectData(message)
+                    reflectPutObjectData(message.body)
                         .then(() => {
-                            console.log(`Successfully reflected data for objectKey: ${message.objectKey}`);
+                            console.log(`Successfully reflected data for put file name: ${message.body.objectKey}`);
                             resolve('');
                         })
                         .catch((error) => {
-                            console.error(`Failed to reflect data for objectKey: ${message.objectKey}, error: ${error}`);
-                            reject(message.messaqeId);
+                            console.error(`Failed to reflect data for put file name: ${message.body.objectKey}, error: ${error}`);
+                            reject(message.messageId);
                         });
                 })
                 reflectPromises.push(putPromise);
                 break;
             case "Delete":
                 const deletePromise = new Promise<string>(async (resolve, reject) => {
-                    reflectDeleteObjectData(message)
+                    reflectDeleteObjectData(message.body)
                         .then(() => {
-                            console.log(`Successfully reflected data for objectKey: ${message.objectKey}`);
+                            console.log(`Successfully reflected data for deleted file name: ${message.body.objectKey}`);
                             resolve('');
                         })
                         .catch((error) => {
-                            console.error(`Failed to reflect data for objectKey: ${message.objectKey}, error: ${error}`);
-                            reject(message.messaqeId);
+                            console.error(`Failed to reflect data for deleted file name: ${message.body.objectKey}, error: ${error}`);
+                            reject(message.messageId);
                         });
                 })
                 reflectPromises.push(deletePromise);
                 break;
-            default:
-                console.error(`Unsupported S3 eventType ${message.eventType} is received`);
-                return;
         }
     })
 

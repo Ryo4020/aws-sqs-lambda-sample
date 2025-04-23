@@ -5,8 +5,6 @@ import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { attachServicePrefix } from '../../util/attach-service-prefix';
 
 export const generateBucketEventQueue = (scope: Construct) => {
-    // S3 event notifications aren't currently compatible with FIFO queues.
-
     // Create a dead letter queue
     const deadLetterQueue = new sqs.Queue(scope, 'DeadLetterQueue', {
         queueName: attachServicePrefix('BucketEventQueueDeadLetterQueue'),

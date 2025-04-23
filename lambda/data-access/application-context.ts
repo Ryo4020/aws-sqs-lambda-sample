@@ -1,10 +1,12 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { S3Client } from "@aws-sdk/client-s3";
+import { SQSClient } from "@aws-sdk/client-sqs";
 
 let applicationContextCashe: ApplicationContext | null = null;
 export class ApplicationContext {
     private dynamoDBClient: DynamoDBClient | null = null;
     private s3Client: S3Client | null = null;
+    private sqsClient: SQSClient | null = null;
 
     private constructor() {}
 
@@ -22,6 +24,14 @@ export class ApplicationContext {
         this.s3Client = new S3Client({});
 
         return this.s3Client;
+    }
+
+    public getSQSClient(): SQSClient {
+        if (this.sqsClient) return this.sqsClient;
+
+        this.sqsClient = new SQSClient({});
+
+        return this.sqsClient;
     }
 
     public static load(): ApplicationContext {

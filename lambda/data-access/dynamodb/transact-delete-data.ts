@@ -3,8 +3,9 @@ import { TransactWriteItem, TransactWriteItemsCommand } from "@aws-sdk/client-dy
 import { ApplicationContext } from "../application-context";
 import { RetryableError } from "../../error/retryable-error";
 import { S3ObjectContentData } from "../../type/s3-object-content-data";
+import { BucketEventMessageType } from "../../type/bucket-event-message";
 
-export const transactDeleteData = async (sourceFileName: string, deleteDataList: S3ObjectContentData[]): Promise<void> => {
+export const transactDeleteData = async (message: BucketEventMessageType, deleteDataList: S3ObjectContentData[]): Promise<void> => {
     const dataTableName = process.env.DATA_TABLE_NAME;
     const timestampTableName = process.env.TIMESTAMP_TABLE_NAME;
     if (!dataTableName || !timestampTableName) throw new Error("DATA_TABLE_NAME or TIMESTAMP_TABLE_NAME is not defined");
@@ -12,18 +13,16 @@ export const transactDeleteData = async (sourceFileName: string, deleteDataList:
     const applicationContext = ApplicationContext.load();
     const dynamodbClient = applicationContext.getDynamoDBClient();
 
-    const nowMilliseconds = Date.now();
-
     const deleteItems: TransactWriteItem[] = deleteDataList.map((data) => ({
         Delete: {
             TableName: dataTableName,
             Key: {
                 student_id: { S: data.studentId },
-                student_num: { N: data.studentNum.toString()}
+                student_num: { N: data.studentNum.toString() }
             },
             ConditionExpression: "source_file_name = :source_file_name",
             ExpressionAttributeValues: {
-                ":source_file_name": { S: sourceFileName }
+                ":source_file_name": { S: message.objectKey }
             }
         }
     }));
@@ -31,9 +30,9 @@ export const transactDeleteData = async (sourceFileName: string, deleteDataList:
         Put: {
             TableName: timestampTableName,
             Item: {
-                source_file_name: { S: sourceFileName },
-                event_timestamp: { N: nowMilliseconds.toString() },
-                ttl: { N: (Math.floor(nowMilliseconds / 1000) + 60 * 60 * 24 * 3).toString() }, // 3 days
+                source_file_name: { S: message.objectKey },
+                event_timestamp: { N: message.eventTimestampMilliSec.toString() },
+                ttl: { N: (Math.floor(message.eventTimestampMilliSec / 1000) + 60 * 60 * 24 * 3).toString() }, // 3 days
             },
         }
     }

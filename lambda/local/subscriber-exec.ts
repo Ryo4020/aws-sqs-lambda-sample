@@ -10,72 +10,31 @@ const records: SQSEvent["Records"] = [
         messageId: 'message-id-1',
         receiptHandle: 'receipt-handle-1',
         body: `{
-            "Records":[
+            "eventType": "Put",
+            "eventTimestampMilliSec": 1735657200000,
+            "objectKey": "sample.csv",
+            "dataList": [
                 {
-                    "eventVersion":"2.1",
-                    "eventSource":"aws:s3",
-                    "awsRegion":"ap-northeast-1",
-                    "eventTime":"2024-01-01T00:00:00.000Z",
-                    "eventName":"ObjectCreated:Put",
-                    "userIdentity":{"principalId":"AWS"},
-                    "requestParameters":{"sourceIPAddress":"0.0.0.0"},
-                    "responseElements":{
-                        "x-amz-request-id":"request-id",
-                        "x-amz-id-2":"id"
-                    },
-                    "s3":{
-                        "s3SchemaVersion":"1.0",
-                        "configurationId":"configuration-id",
-                        "bucket":{
-                            "name":"aws-queue-system-sample-event-source-bucket",
-                            "ownerIdentity":{"principalId":"principal-id"},
-                            "arn":"arn:aws:s3:::aws-queue-system-sample-event-source-bucket"
-                        },
-                        "object":{
-                            "key":"sample.csv",
-                            "size":181,
-                            "eTag":"etag",
-                            "versionId":"version-id",
-                            "sequencer":"sequencer"
-                        }
-                    }
+                    "studentId": "s1",
+                    "studentNum": 1,
+                    "studentName": "a",
+                    "grade": 1,
+                    "className": "A"
                 },
                 {
-                    "eventVersion":"2.1",
-                    "eventSource":"aws:s3",
-                    "awsRegion":"ap-northeast-1",
-                    "eventTime":"2024-01-01T00:00:00.000Z",
-                    "eventName":"ObjectRemoved:Delete",
-                    "userIdentity":{"principalId":"AWS"},
-                    "requestParameters":{"sourceIPAddress":"0.0.0.0"},
-                    "responseElements":{
-                        "x-amz-request-id":"request-id",
-                        "x-amz-id-2":"id"
-                    },
-                    "s3":{
-                        "s3SchemaVersion":"1.0",
-                        "configurationId":"configuration-id",
-                        "bucket":{
-                            "name":"aws-queue-system-sample-event-source-bucket",
-                            "ownerIdentity":{"principalId":"principal-id"},
-                            "arn":"arn:aws:s3:::aws-queue-system-sample-event-source-bucket"
-                        },
-                        "object":{
-                            "key":"sample2.csv",
-                            "size":181,
-                            "eTag":"etag",
-                            "versionId":"version-id",
-                            "sequencer":"sequencer"
-                        }
-                    }
+                    "studentId": "s2",
+                    "studentNum": 2,
+                    "studentName": "b",
+                    "grade": 1,
+                    "className": "A"
                 }
             ]
         }`,
         attributes: {
             ApproximateReceiveCount: '1',
-            SentTimestamp: '1743164028025',
+            SentTimestamp: '1735657200000',
             SenderId: 'sender-id:S3-PROD-END',
-            ApproximateFirstReceiveTimestamp: '1743164028044'
+            ApproximateFirstReceiveTimestamp: '1735657200000'
         },
         messageAttributes: {},
         md5OfBody: 'md5-of-body',

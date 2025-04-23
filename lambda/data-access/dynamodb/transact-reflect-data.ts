@@ -2,17 +2,16 @@ import { TransactWriteItem, TransactWriteItemsCommand } from "@aws-sdk/client-dy
 
 import { ApplicationContext } from "../application-context";
 import { S3ObjectContentData } from "../../type/s3-object-content-data";
+import { BucketEventMessageType } from "../../type/bucket-event-message";
 import { RetryableError } from "../../error/retryable-error";
 
-export const transactReflectData = async (sourceFileName: string, putDataList: S3ObjectContentData[], deleteDataList: S3ObjectContentData[]): Promise<void> => {
+export const transactReflectData = async (message: BucketEventMessageType, putDataList: S3ObjectContentData[], deleteDataList: S3ObjectContentData[]): Promise<void> => {
     const dataTableName = process.env.DATA_TABLE_NAME;
     const timestampTableName = process.env.TIMESTAMP_TABLE_NAME;
     if (!dataTableName || !timestampTableName) throw new Error("DATA_TABLE_NAME or TIMESTAMP_TABLE_NAME is not defined");
 
     const applicationContext = ApplicationContext.load();
     const dynamodbClient = applicationContext.getDynamoDBClient();
-
-    const nowMilliseconds = Date.now();
 
     const putItems: TransactWriteItem[] = putDataList.map((data) => ({
         Put: {
@@ -23,7 +22,7 @@ export const transactReflectData = async (sourceFileName: string, putDataList: S
                 student_name: { S: data.studentName },
                 grade: { N: data.grade.toString() },
                 class_name: { S: data.className },
-                source_file_name: { S: sourceFileName },
+                source_file_name: { S: message.objectKey },
             }
         }
     }));
@@ -36,7 +35,7 @@ export const transactReflectData = async (sourceFileName: string, putDataList: S
             },
             ConditionExpression: "source_file_name = :source_file_name",
             ExpressionAttributeValues: {
-                ":source_file_name": { S: sourceFileName }
+                ":source_file_name": { S: message.objectKey }
             }
         }
     }));
@@ -44,9 +43,9 @@ export const transactReflectData = async (sourceFileName: string, putDataList: S
         Put: {
             TableName: timestampTableName,
             Item: {
-                source_file_name: { S: sourceFileName },
-                event_timestamp: { N: nowMilliseconds.toString() },
-                ttl: { N: (Math.floor(nowMilliseconds / 1000) + 60 * 60 * 24 * 3).toString() }, // 3 days
+                source_file_name: { S: message.objectKey },
+                event_timestamp: { N: message.eventTimestampMilliSec.toString() },
+                ttl: { N: (Math.floor(message.eventTimestampMilliSec / 1000) + 60 * 60 * 24 * 3).toString() }, // 3 days
             },
         }
     }
