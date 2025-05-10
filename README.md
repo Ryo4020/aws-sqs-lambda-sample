@@ -1,14 +1,25 @@
-# Welcome to your CDK TypeScript project
+# CDK TypeScript project
 
-This is a blank project for CDK development with TypeScript.
+This is an AWS CDK project, **"AWS SQS Lambda Sample"**.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+You can deploy **ETL system** (csv file on S3 to DynamoDB).
 
-## Useful commands
+## How to deploy
+```
+export AWS_PROFILE={aws_profile_name}
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `npx cdk deploy`  deploy this stack to your default AWS account/region
-* `npx cdk diff`    compare deployed stack with current state
-* `npx cdk synth`   emits the synthesized CloudFormation template
+npm install
+
+npx cdk deploy AWSQueueSystemSampleStack
+npm run cmd-put-retention
+```
+
+## How to use deployed system
+- upload csv file about students to S3 bucket (`{your-system-name}-event-source-bucket`)
+    - [sample.csv](sample.csv) might be a helpful example.
+
+
+## How to destroy deployed resources
+```
+npx cdk destroy AWSQueueSystemSampleStack
+```
