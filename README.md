@@ -3,6 +3,7 @@
 This is an AWS CDK project, **"AWS SQS Lambda Sample"**.
 
 You can deploy **ETL system** (csv file on S3 to DynamoDB).
+![aws-sqs-lambda-sample](https://github.com/user-attachments/assets/7cbe4762-33ce-4007-9cd9-e7541bde28b2)
 
 ## How to deploy
 ```
